@@ -12,23 +12,35 @@ LNMP架构docker化脚本
 目录文件结构：
 
 [root@lb02 ~]# tree mariadb/
+
 mariadb/
+
 ├── Dockerfile
+
 └── start.sh
 
 0 directories, 2 files
+
 [root@lb02 ~]# tree nginx
+
 nginx
+
 ├── Dockerfile
+
 ├── nginx.conf
+
 └── server.conf
 
 0 directories, 3 files
+
 [root@lb02 ~]# tree php7/
+
 php7/
+
 └── Dockerfile
 
 0 directories, 1 file
+
 [root@lb02 ~]# 
 
 三、脚本的执行
