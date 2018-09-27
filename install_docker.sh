@@ -10,20 +10,18 @@ echo
 echo "版本：nginx：1.14.0  mariadb：5.5.60  php：7.2.7"
 echo
 echo -e "\033[31;32m===========部署前的准备=========\033[0m"
-echo -e "\033[31;32m-----------创建www用户和组---------\033[0m"
-id www &> /dev/null
-[ $? -ne 0 ] && groupadd -g 1080 www && useradd -g 1080 -u 1080 -M -s /sbin/nologin www
 echo -e "\033[31;32m-----------创建mysql用户和组---------\033[0m"
 id mysql &> /dev/null
 [ $? -ne 0 ] && groupadd -g 3306 mysql  && useradd -g 3306 -u 3306 -M -s /sbin/nologin mysql
 echo -e "\033[31;32m-----------创建网站目录和数据库data目录---------\033[0m"
-[ ! -d /wwwroot ] && mkdir /wwwroot && chown -R www.www /wwwroot && chmod -R 777 /wwwroot
+[ ! -d /wwwroot ] && mkdir /wwwroot && chown -R nobody.nobody /wwwroot && chmod -R 777 /wwwroot
 [ ! -d /mariadb/3306/data ] && mkdir /mariadb/3306/data -p && chown -R mysql.mysql /mariadb/3306/data && chmod -R 777 /mariadb/3306/data
 echo
+echo -e "\033[31;32m-----------创建nginx、mariadb、php日志存放目录---------\033[0m"
+[ ! -d /var/log/nginx/ ] && mkdir /var/log/nginx/ && chown nobody.nobody /var/log/nginx/
 echo -e "\033[31;32m===========安装docker=========\033[0m"
 echo -e "\033[31;32m-----------下载repo文件---------\033[0m"
 [ ! -f /etc/yum.repos.d/docker-ce.repo ] && curl -o /etc/yum.repos.d/docker-ce.repo https://mirrors.aliyun.com/docker-ce/linux/centos/docker-ce.repo
-yum clean all &> /dev/null && yum makecache &> /dev/null
 yum install docker-ce -y
 echo -e "\033[31;32m-----------设置加速器---------\033[0m"
 [ ! -d /etc/docker ] && mkdir /etc/docker
@@ -40,7 +38,7 @@ echo -e "\033[31;32m===================================\033[0m"
 [ ! -d mariadb ] && mkdir mariadb
 [ ! -d php ] && mkdir  php
 cat>nginx/nginx.conf<<EOF
-user  www www;
+user  nobody nobody;
 worker_processes  1;
 worker_rlimit_nofile 65535;
 error_log  /var/log/nginx/error.log notice;
@@ -114,17 +112,14 @@ MAINTAINER caomuzhong www.logmm.com
 RUN yum install -y gcc gcc-c++ pcre-devel openssl-devel libxml2-devel openssl libcurl-devel make zlib zlib-devel gd-devel
 
 #Install Nginx
-RUN groupadd -g 1080 www && useradd  -g 1080 -u 1080 -s /sbin/nologin www \
-   &&  mkdir -p /usr/local/nginx/ \
+RUN  mkdir -p /usr/local/nginx/ \
    &&  mkdir -p /var/log/nginx  \
-   &&  chown www.www /var/log/nginx \
-   &&  touch /var/log/nginx/error.log \
-   &&  chown www.www /var/log/nginx/error.log
+   &&  chown nobody.nobody /var/log/nginx \
+#   &&  touch /var/log/nginx/error.log \
+#   &&  chown www.www /var/log/nginx/error.log
 ADD http://nginx.org/download/nginx-1.14.0.tar.gz .
 RUN tar xf nginx-1.14.0.tar.gz && rm -f nginx-1.14.0.tar.gz \
    &&  cd nginx-1.14.0 && ./configure --prefix=/usr/local/nginx \
-       --user=www \
-       --group=www \
        --http-log-path=/var/log/nginx/access.log \
        --error-log-path=/var/log/nginx/error.log \
        --with-http_ssl_module \
@@ -186,7 +181,7 @@ RUN cd /usr/local/mysql && /usr/bin/cp support-files/my-large.cnf /etc/my.cnf \
   && sed -i '/thread_concurrency = 8/adatadir = /mariadb/3306/data/\ninnodb_file_per = on\nskip_name_resolve = on' /etc/my.cnf \
   && /usr/bin/cp support-files/mysql.server /etc/rc.d/init.d/mariadb \
   && chmod +x /etc/rc.d/init.d/mariadb \
-  && touch /var/log/mariadb.log && chown mysql.mysql /var/log/mariadb.log \
+#  && touch /var/log/mariadb.log && chown mysql.mysql /var/log/mariadb.log \
   && chkconfig --add mariadb
 #expose
 EXPOSE 3306
@@ -212,7 +207,7 @@ RUN yum install -y epel-release bzip2-devel openssl-devel gnutls-devel gcc gcc-c
 RUN  mkdir -p /usr/local/nginx/html
 #Install PHP7.2.7
 ADD http://cn.php.net/distributions/php-7.2.7.tar.gz .
-RUN tar xf php-7.2.7.tar.gz && rm -f php-7.2.7.tar.gz && groupadd -g 3306 mysql && useradd -g 3306 -u 3306 -s /sbin/nologin mysql && groupadd -g 1080 www && useradd  -g 1080 -u 1080 -s /sbin/nologin www \
+RUN tar xf php-7.2.7.tar.gz && rm -f php-7.2.7.tar.gz && groupadd -g 3306 mysql && useradd -g 3306 -u 3306 -s /sbin/nologin mysql && groupadd -g 1080 php-fpm && useradd  -g 1080 -u 1080 -s /sbin/nologin php-fpm \
     && cd php-7.2.7 \
     && ./configure  --prefix=/usr/local/php7 \
         --with-config-file-path=/etc/php7 \
@@ -252,11 +247,10 @@ RUN tar xf php-7.2.7.tar.gz && rm -f php-7.2.7.tar.gz && groupadd -g 3306 mysql 
         --enable-mysqlnd-compression-support \
         --enable-maintainer-zts  \
         --enable-session \
-        --with-fpm-user=www \
-        --with-fpm-group=www  && make -j 2  && make -j 2 install && yum clean all
+        --with-fpm-user=php-fpm \
+        --with-fpm-group=php-fpm  && make -j 2  && make -j 2 install && yum clean all
 #Config file
-RUN mkdir /etc/php7{,.d}
-RUN cd php-7.2.7 && cp php.ini-production  /etc/php7/php.ini \
+RUN mkdir /etc/php7{,.d} && cd php-7.2.7 && cp php.ini-production  /etc/php7/php.ini \
     && cp sapi/fpm/init.d.php-fpm  /etc/rc.d/init.d/php-fpm && chmod +x /etc/rc.d/init.d/php-fpm && chkconfig --add php-fpm
 RUN sed -i '/post_max_size/s/8/16/g;/max_execution_time/s/30/300/g;/max_input_time/s/60/300/g;s#\;date.timezone.*#date.timezone \= Asia/Shanghai#g' /etc/php7/php.ini
 RUN cp /usr/local/php7/etc/php-fpm.conf.default /usr/local/php7/etc/php-fpm.conf \

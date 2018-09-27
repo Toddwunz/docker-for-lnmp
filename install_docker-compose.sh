@@ -42,6 +42,7 @@ services:
          - php
        volumes:
          - /wwwroot/:/usr/local/nginx/html
+         - /var/log/nginx/:/var/log/nginx/
        restart: always
 EOF
 echo -e "\033[34myml文件创建成功，执行docker-compose  up -d命令即可。\033[0m"
