@@ -39,9 +39,9 @@ nginx
 
 0 directories, 3 files
 
-[root@lb02 ~]# tree php7/
+[root@lb02 ~]# tree php/
 
-php7/
+php/
 
 └── Dockerfile
 
