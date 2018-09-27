@@ -9,6 +9,10 @@
 
 宿主机系统：RHEL 7.5（3.10.0-862.el7.x86_64 #1 SMP Wed Mar 21 18:14:51 EDT 2018 x86_64 x86_64 x86_64 GNU/Linux）
 
+宿主机网站目录：/wwwroot，数据库data目录：/mariadb/3306/data。
+
+宿主机关闭防火墙和selinux。
+
 二、文件目录
 
 目录文件结构：
