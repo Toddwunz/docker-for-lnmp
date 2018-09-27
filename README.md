@@ -2,13 +2,15 @@
 LNMP架构docker化脚本
 
 一、系统环境
+
 在一台机子上跑nginx、mariadb、php共3个容器
 
 软件版本：nginx-1.14.0、mariadb-5.5.60、php-7.2.7
 
 宿主机系统：RHEL 7.5（3.10.0-862.el7.x86_64 #1 SMP Wed Mar 21 18:14:51 EDT 2018 x86_64 x86_64 x86_64 GNU/Linux）
 
-二、文件
+二、文件目录
+
 目录文件结构：
 
 [root@lb02 ~]# tree mariadb/
