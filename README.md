@@ -1,5 +1,5 @@
 # docker-for-lnmp
-LNMP架构docker化脚本
+#LNMP架构docker化脚本
 
 一、系统环境
 
