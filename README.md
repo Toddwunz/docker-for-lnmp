@@ -8,6 +8,7 @@ LNMP架构docker化脚本
 
 二、文件
 目录文件结构：
+
 [root@lb02 ~]# tree mariadb/
 mariadb/
 ├── Dockerfile
