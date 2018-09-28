@@ -4,29 +4,29 @@
 #一键部署lnmp架构容器化
 
 echo -e "\033[31;32m*****************************************************\033[0m"
-echo -e "\033[31;32m================一键部署lnmp容器化===================\033[0m"
+echo -e "\033[34m================一键部署lnmp容器化===================\033[0m"
 echo -e "\033[31;32m*****************************************************\033[0m"
 echo
 echo "版本：nginx：1.14.0  mariadb：5.5.60  php：7.2.7"
 echo
 echo -e "\033[31;32m===========部署前的准备=========\033[0m"
-echo -e "\033[31;32m-----------创建nginx用户和组---------\033[0m"
+echo -e "\033[34m-----------创建nginx用户和组---------\033[0m"
 id nginx &> /dev/null
 [ $? -ne 0 ] && groupadd -g 1080 nginx  && useradd -g nginx -u nginx -M -s /sbin/nologin nginx
-echo -e "\033[31;32m-----------创建mysql用户和组---------\033[0m"
+echo -e "\033[34m-----------创建mysql用户和组---------\033[0m"
 id mysql &> /dev/null
 [ $? -ne 0 ] && groupadd -g 3306 mysql  && useradd -g 3306 -u 3306 -M -s /sbin/nologin mysql
-echo -e "\033[31;32m-----------创建网站目录和数据库data目录---------\033[0m"
+echo -e "\033[34m-----------创建网站目录和数据库data目录---------\033[0m"
 [ ! -d /wwwroot ] && mkdir /wwwroot && chown -R nginx.nginx /wwwroot && chmod -R 777 /wwwroot
 [ ! -d /mariadb/3306/data ] && mkdir /mariadb/3306/data -p && chown -R mysql.mysql /mariadb/3306/data && chmod -R 777 /mariadb/3306/data
 echo
-echo -e "\033[31;32m-----------创建nginx、mariadb、php日志存放目录---------\033[0m"
+echo -e "\033[34-----------创建nginx、mariadb、php日志存放目录---------\033[0m"
 [ ! -d /var/log/nginx/ ] && mkdir /var/log/nginx/ && chown nginx.nginx /var/log/nginx/
 echo -e "\033[31;32m===========安装docker=========\033[0m"
-echo -e "\033[31;32m-----------下载repo文件---------\033[0m"
+echo -e "\033[34m-----------下载repo文件---------\033[0m"
 [ ! -f /etc/yum.repos.d/docker-ce.repo ] && curl -o /etc/yum.repos.d/docker-ce.repo https://mirrors.aliyun.com/docker-ce/linux/centos/docker-ce.repo
 yum install docker-ce -y
-echo -e "\033[31;32m-----------设置加速器---------\033[0m"
+echo -e "\033[34m-----------设置加速器---------\033[0m"
 [ ! -d /etc/docker ] && mkdir /etc/docker
 cat >/etc/docker/daemon.json<<EOF
 {
@@ -35,7 +35,7 @@ cat >/etc/docker/daemon.json<<EOF
 EOF
 systemctl start docker && echo -e "\033[31;32m-----------docker启动成功---------\033[0m"
 echo -e "\033[31;32m===================================\033[0m"
-echo -e "\033[31;32m    创建nginx、mariadb、php镜像    \033[0m"
+echo -e "\033[34m    创建nginx、mariadb、php镜像    \033[0m"
 echo -e "\033[31;32m===================================\033[0m"
 [ ! -d nginx ] && mkdir nginx 
 [ ! -d mariadb ] && mkdir mariadb
@@ -104,7 +104,7 @@ location ~ \.php\$ {
 }
 }
 EOF
-echo -e "\033[31;32m================创建nginx Dockerfile===========\033[0m"
+echo -e "\033[34m================创建nginx Dockerfile===========\033[0m"
 cat>nginx/Dockerfile<<EOF
 FROM centos
 
@@ -134,9 +134,8 @@ RUN tar xf nginx-1.14.0.tar.gz && rm -f nginx-1.14.0.tar.gz \
        --with-http_gunzip_module \
        --with-http_gzip_static_module \
        --with-http_image_filter_module \
-       --with-http_stub_status_module &&  make && make install && yum clean all
-
-RUN rm -f /usr/local/nginx/conf/nginx.conf && mkdir /usr/local/nginx/conf.d/
+       --with-http_stub_status_module &&  make && make install && yum clean all \
+  && rm -f /usr/local/nginx/conf/nginx.conf && mkdir /usr/local/nginx/conf.d/ && rm -rf /nginx-1.14.0
 COPY nginx/nginx.conf  /usr/local/nginx/conf/nginx.conf
 COPY nginx/server.conf /usr/local/nginx/conf.d/
 
@@ -146,7 +145,7 @@ EXPOSE 80 443
 #Front desk start nginx
 ENTRYPOINT ["/usr/local/nginx/sbin/nginx","-g","daemon off;"] 
 EOF
-echo -e "\033[31;32m================创建mariadb Dockerfile===========\033[0m"
+echo -e "\033[34m================创建mariadb Dockerfile===========\033[0m"
 cat>mariadb/start.sh<<EOF
 #!/bin/bash
 if [ ! -f mariadb/3306/data/ibdata1 ]; then
@@ -167,12 +166,15 @@ FROM centos
 MAINTAINER caomuzhong www.logmm.com
 
 #Create mysql user and Data dir
-RUN groupadd -g 3306 mysql && useradd -g 3306 -u 3306 -s /sbin/nologin mysql && mkdir /mariadb/3306/data -p \
+RUN groupadd -g 3306 mysql && useradd -g 3306 -u 3306 -s /sbin/nologin mysql \
+   && mkdir /mariadb/3306/data -p \
    && chown -R mysql.mysql /mariadb/
 
 #Download mariadb5.5.60 package
+
 ADD http://mirrors.tuna.tsinghua.edu.cn/mariadb//mariadb-5.5.60/bintar-linux-x86_64/mariadb-5.5.60-linux-x86_64.tar.gz .
 #http://mirrors.neusoft.edu.cn/mariadb//mariadb-5.5.60/bintar-linux-x86_64/mariadb-5.5.60-linux-x86_64.tar.gz
+
 #Unzip
 RUN tar xf mariadb-5.5.60-linux-x86_64.tar.gz -C /usr/local/ \
   && rm -f mariadb-5.5.60-linux-x86_64.tar.gz \
@@ -194,7 +196,7 @@ ADD mariadb/start.sh  /opt/startup.sh
 RUN chmod +x /opt/startup.sh
 CMD ["/bin/bash","/opt/startup.sh"]
 EOF
-echo -e "\033[31;32m================创建php Dockerfile===========\033[0m"
+echo -e "\033[34m================创建php Dockerfile===========\033[0m"
 cat>php/Dockerfile<<EOF
 ###  Set the base image to CentOS
 FROM centos
@@ -208,14 +210,16 @@ RUN yum install -y epel-release bzip2-devel openssl-devel gnutls-devel gcc gcc-c
 #ADD http://iweb.dl.sourceforge.net/project/mcrypt/Libmcrypt/2.5.8/libmcrypt-2.5.8.tar.gz .
 #RUN tar xf libmcrypt-2.5.8.tar.gz && cd libmcrypt-2.5.8 && ./configure && make && make install
 
-#Create dir the same for nginx's root dir
-RUN  mkdir -p /usr/local/nginx/html
-#Install PHP7.2.x
+#Install PHP7.2.x and Create dir the same for nginx's root dir
+
 #ADD http://cn.php.net/distributions/php-7.2.7.tar.gz .
 #ADD http://nz2.php.net/distributions/php-7.2.10.tar.gz .
 #ADD http://hk2.php.net/distributions/php-7.2.10.tar.gz .
 ADD http://uk1.php.net/distributions/php-7.2.10.tar.gz .
-RUN tar xf php-7.2.10.tar.gz && rm -f php-7.2.10.tar.gz && groupadd -g 3306 mysql && useradd -g 3306 -u 3306 -s /sbin/nologin mysql && groupadd -g 1080 php-fpm && useradd  -g 1080 -u 1080 -s /sbin/nologin php-fpm \
+RUN tar xf php-7.2.10.tar.gz && rm -f php-7.2.10.tar.gz \
+    && groupadd -g 3306 mysql && useradd -g 3306 -u 3306 -s /sbin/nologin mysql \
+    && groupadd -g 1080 php-fpm && useradd  -g 1080 -u 1080 -s /sbin/nologin php-fpm \
+    && mkdir -p /usr/local/nginx/html \
     && cd php-7.2.10 \
     && ./configure  --prefix=/usr/local/php7 \
         --with-config-file-path=/etc/php7 \
@@ -259,20 +263,20 @@ RUN tar xf php-7.2.10.tar.gz && rm -f php-7.2.10.tar.gz && groupadd -g 3306 mysq
         --with-fpm-group=php-fpm  && make -j 2  && make -j 2 install && yum clean all
 #Config file
 RUN mkdir /etc/php7{,.d} && cd php-7.2.10 && cp php.ini-production  /etc/php7/php.ini \
-    && cp sapi/fpm/init.d.php-fpm  /etc/rc.d/init.d/php-fpm && chmod +x /etc/rc.d/init.d/php-fpm && chkconfig --add php-fpm
-RUN sed -i '/post_max_size/s/8/16/g;/max_execution_time/s/30/300/g;/max_input_time/s/60/300/g;s#\;date.timezone.*#date.timezone \= Asia/Shanghai#g' /etc/php7/php.ini
-RUN cp /usr/local/php7/etc/php-fpm.conf.default /usr/local/php7/etc/php-fpm.conf \
+    && cp sapi/fpm/init.d.php-fpm  /etc/rc.d/init.d/php-fpm && chmod +x /etc/rc.d/init.d/php-fpm && chkconfig --add php-fpm \
+    && sed -i '/post_max_size/s/8/16/g;/max_execution_time/s/30/300/g;/max_input_time/s/60/300/g;s#\;date.timezone.*#date.timezone \= Asia/Shanghai#g' /etc/php7/php.ini \
+    && cp /usr/local/php7/etc/php-fpm.conf.default /usr/local/php7/etc/php-fpm.conf \
     && cp /usr/local/php7/etc/php-fpm.d/www.conf.default /usr/local/php7/etc/php-fpm.d/www.conf \
-    && sed -i -e 's/listen = 127.0.0.1:9000/listen = 0.0.0.0:9000/' /usr/local/php7/etc/php-fpm.d/www.conf
+    && sed -i -e 's/listen = 127.0.0.1:9000/listen = 0.0.0.0:9000/' /usr/local/php7/etc/php-fpm.d/www.conf && rm -rf /php-7.2.10
 #EXPOSE
 EXPOSE 9000
 #Start php-fpm
 ENTRYPOINT ["/usr/local/php7/sbin/php-fpm", "-F", "-c", "/etc/php7/php.ini"]
 
 EOF
-echo -e "\033[31;32m=======================================================================\033[0m"
-echo -e "\033[31;32m          构建镜像的命令（建议打开多个终端同时执行以下命令）           \033[0m"
-echo -e "\033[31;32m构建nginx镜像：docker build -t centos_nginx -f nginx/Dockerfile .      \033[0m"
-echo -e "\033[31;32m构建mariadb镜像：docker build -t centos_mariadb -f mariadb/Dockerfile . \033[0m"
-echo -e "\033[31;32m构建php镜像：docker build -t centos_php -f php/Dockerfile .             \033[0m"
-echo -e "\033[31;32m=======================================================================\033[0m"
+echo -e "\033[31;32m====================================================================\033[0m"
+echo -e "\033[31;32m     构建镜像的命令（建议打开多个终端同时执行以下命令,节省时间）    \033[0m"
+echo -e "\033[34m构建nginx镜像：docker build -t centos_nginx -f nginx/Dockerfile .      \033[0m"
+echo -e "\033[34m构建mariadb镜像：docker build -t centos_mariadb -f mariadb/Dockerfile . \033[0m"
+echo -e "\033[34m构建php镜像：docker build -t centos_php -f php/Dockerfile .             \033[0m"
+echo -e "\033[31;32m======================================================================\033[0m"

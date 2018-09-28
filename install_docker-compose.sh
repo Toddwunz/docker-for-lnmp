@@ -3,9 +3,9 @@
 #by author caomuzhong
 #Blog:www.logmm.com
 echo
-echo -e "\033[31;32m           安装docker compose          \033[0m"
+echo -e "\033[34m======================安装docker compose======================\033[0m"
 [ ! -f /usr/local/bin/docker-compose ] && curl -L https://github.com/docker/compose/releases/download/1.22.0/docker-compose-$(uname -s)-$(uname -m) -o /usr/local/bin/docker-compose && chmod +x /usr/local/bin/docker-compose
-echo -e "\033[31;32m       创建部署lnmp的yaml文件  \033[0m"
+echo -e "\033[34m====================创建部署lnmp的yaml文件====================\033[0m"
 cat>docker-compose.yml<<EOF
 version: "3"
 services:
@@ -45,4 +45,4 @@ services:
          - /var/log/nginx/:/var/log/nginx/
        restart: always
 EOF
-echo -e "\033[34myml文件创建成功，执行docker-compose  up -d命令即可。\033[0m"
+echo -e "\033[34m*****yml文件创建成功，执行docker-compose  up -d命令即可启动容器*****\033[0m"
