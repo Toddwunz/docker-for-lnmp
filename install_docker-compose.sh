@@ -23,7 +23,7 @@ services:
     php:
        build: php/
        image: centos_php
-       container_name: php-7.2.7
+       container_name: php-7.2.10
        ports:
          - "9000:9000"
        links:
