@@ -10,15 +10,18 @@ echo
 echo "版本：nginx：1.14.0  mariadb：5.5.60  php：7.2.7"
 echo
 echo -e "\033[31;32m===========部署前的准备=========\033[0m"
+echo -e "\033[31;32m-----------创建nginx用户和组---------\033[0m"
+id nginx &> /dev/null
+[ $? -ne 0 ] && groupadd -g 1080 nginx  && useradd -g nginx -u nginx -M -s /sbin/nologin nginx
 echo -e "\033[31;32m-----------创建mysql用户和组---------\033[0m"
 id mysql &> /dev/null
 [ $? -ne 0 ] && groupadd -g 3306 mysql  && useradd -g 3306 -u 3306 -M -s /sbin/nologin mysql
 echo -e "\033[31;32m-----------创建网站目录和数据库data目录---------\033[0m"
-[ ! -d /wwwroot ] && mkdir /wwwroot && chown -R nobody.nobody /wwwroot && chmod -R 777 /wwwroot
+[ ! -d /wwwroot ] && mkdir /wwwroot && chown -R nginx.nginx /wwwroot && chmod -R 777 /wwwroot
 [ ! -d /mariadb/3306/data ] && mkdir /mariadb/3306/data -p && chown -R mysql.mysql /mariadb/3306/data && chmod -R 777 /mariadb/3306/data
 echo
 echo -e "\033[31;32m-----------创建nginx、mariadb、php日志存放目录---------\033[0m"
-[ ! -d /var/log/nginx/ ] && mkdir /var/log/nginx/ && chown nobody.nobody /var/log/nginx/
+[ ! -d /var/log/nginx/ ] && mkdir /var/log/nginx/ && chown nginx.nginx /var/log/nginx/
 echo -e "\033[31;32m===========安装docker=========\033[0m"
 echo -e "\033[31;32m-----------下载repo文件---------\033[0m"
 [ ! -f /etc/yum.repos.d/docker-ce.repo ] && curl -o /etc/yum.repos.d/docker-ce.repo https://mirrors.aliyun.com/docker-ce/linux/centos/docker-ce.repo
@@ -38,7 +41,7 @@ echo -e "\033[31;32m===================================\033[0m"
 [ ! -d mariadb ] && mkdir mariadb
 [ ! -d php ] && mkdir  php
 cat>nginx/nginx.conf<<EOF
-user  nobody nobody;
+user  nginx nginx;
 worker_processes  1;
 worker_rlimit_nofile 65535;
 error_log  /var/log/nginx/error.log notice;
@@ -112,9 +115,9 @@ MAINTAINER caomuzhong www.logmm.com
 RUN yum install -y gcc gcc-c++ pcre-devel openssl-devel libxml2-devel openssl libcurl-devel make zlib zlib-devel gd-devel
 
 #Install Nginx
-RUN  mkdir -p /usr/local/nginx/ \
+RUN  mkdir -p /usr/local/nginx/ && groupadd -g 1080 nginx  && useradd -g 1080 -u 1080 -M -s /sbin/nologin nginx \
    &&  mkdir -p /var/log/nginx  \
-   &&  chown nobody.nobody /var/log/nginx \
+   &&  chown nginx.nginx /var/log/nginx \
 #   &&  touch /var/log/nginx/error.log \
 #   &&  chown www.www /var/log/nginx/error.log
 ADD http://nginx.org/download/nginx-1.14.0.tar.gz .
@@ -122,6 +125,8 @@ RUN tar xf nginx-1.14.0.tar.gz && rm -f nginx-1.14.0.tar.gz \
    &&  cd nginx-1.14.0 && ./configure --prefix=/usr/local/nginx \
        --http-log-path=/var/log/nginx/access.log \
        --error-log-path=/var/log/nginx/error.log \
+       --user=nginx \
+       --group=nginx \
        --with-http_ssl_module \
        --with-http_realip_module \
        --with-http_flv_module \
@@ -205,10 +210,13 @@ RUN yum install -y epel-release bzip2-devel openssl-devel gnutls-devel gcc gcc-c
 
 #Create dir the same for nginx's root dir
 RUN  mkdir -p /usr/local/nginx/html
-#Install PHP7.2.7
-ADD http://cn.php.net/distributions/php-7.2.7.tar.gz .
-RUN tar xf php-7.2.7.tar.gz && rm -f php-7.2.7.tar.gz && groupadd -g 3306 mysql && useradd -g 3306 -u 3306 -s /sbin/nologin mysql && groupadd -g 1080 php-fpm && useradd  -g 1080 -u 1080 -s /sbin/nologin php-fpm \
-    && cd php-7.2.7 \
+#Install PHP7.2.x
+#ADD http://cn.php.net/distributions/php-7.2.7.tar.gz .
+#ADD http://nz2.php.net/distributions/php-7.2.10.tar.gz .
+#ADD http://hk2.php.net/distributions/php-7.2.10.tar.gz .
+ADD http://uk1.php.net/distributions/php-7.2.10.tar.gz .
+RUN tar xf php-7.2.10.tar.gz && rm -f php-7.2.10.tar.gz && groupadd -g 3306 mysql && useradd -g 3306 -u 3306 -s /sbin/nologin mysql && groupadd -g 1080 php-fpm && useradd  -g 1080 -u 1080 -s /sbin/nologin php-fpm \
+    && cd php-7.2.10 \
     && ./configure  --prefix=/usr/local/php7 \
         --with-config-file-path=/etc/php7 \
         --with-config-file-scan-dir=/etc/php7.d \
@@ -250,7 +258,7 @@ RUN tar xf php-7.2.7.tar.gz && rm -f php-7.2.7.tar.gz && groupadd -g 3306 mysql 
         --with-fpm-user=php-fpm \
         --with-fpm-group=php-fpm  && make -j 2  && make -j 2 install && yum clean all
 #Config file
-RUN mkdir /etc/php7{,.d} && cd php-7.2.7 && cp php.ini-production  /etc/php7/php.ini \
+RUN mkdir /etc/php7{,.d} && cd php-7.2.10 && cp php.ini-production  /etc/php7/php.ini \
     && cp sapi/fpm/init.d.php-fpm  /etc/rc.d/init.d/php-fpm && chmod +x /etc/rc.d/init.d/php-fpm && chkconfig --add php-fpm
 RUN sed -i '/post_max_size/s/8/16/g;/max_execution_time/s/30/300/g;/max_input_time/s/60/300/g;s#\;date.timezone.*#date.timezone \= Asia/Shanghai#g' /etc/php7/php.ini
 RUN cp /usr/local/php7/etc/php-fpm.conf.default /usr/local/php7/etc/php-fpm.conf \
