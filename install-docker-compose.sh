@@ -7,32 +7,40 @@ echo -e "\033[34m======================安装docker compose=====================
 [ ! -f /usr/local/bin/docker-compose ] && curl -L https://github.com/docker/compose/releases/download/1.22.0/docker-compose-$(uname -s)-$(uname -m) -o /usr/local/bin/docker-compose && chmod +x /usr/local/bin/docker-compose
 echo -e "\033[34m====================创建部署lnmp的yaml文件====================\033[0m"
 cat>docker-compose.yml<<EOF
-version: "3"
+version: "2"
 services:
-    mariadb: 
-       build: mariadb/
+    mariadb-slave: 
        image: centos_mariadb
-       container_name: mariadb-5.5.60
+       container_name: mariadb-5.5.60-slave
+       ports:
+         - "3307:3306"
+       environment:
+         - MYSQL_ROOT_PASSWORD=123456
+       volumes:
+         - /testdb/3307/data/:/testdb/3306/data/:rw
+         - /testdb/3307/my.cnf:/etc/my.cnf:ro
+       restart: always
+    mariadb-master: 
+       image: centos_mariadb
+       container_name: mariadb-5.5.60-master
        ports:
          - "3306:3306"
        environment:
          - MYSQL_ROOT_PASSWORD=123456
        volumes:
-         - /mariadb/3306/data/:/mariadb/3306/data/
+         - /testdb/3306/data/:/testdb/3306/data/:rw
        restart: always
     php:
-       build: php/
        image: centos_php
        container_name: php-7.2.10
        ports:
          - "9000:9000"
        links:
-         - mariadb
+         - mariadb-master
        volumes:
-         - /wwwroot/:/usr/local/nginx/html
+         - /testweb/:/usr/local/nginx/html:rw
        restart: always
     nginx:
-       build: nginx/
        image: centos_nginx
        container_name: nginx-1.14.0
        ports:
@@ -41,8 +49,10 @@ services:
        links:
          - php
        volumes:
-         - /wwwroot/:/usr/local/nginx/html
-         - /var/log/nginx/:/var/log/nginx/
+         - /testweb/:/usr/local/nginx/html:rw
+         - /var/log/nginx/:/var/log/nginx/:rw
        restart: always
 EOF
-echo -e "\033[34m*****yml文件创建成功，执行docker-compose  up -d命令即可启动容器*****\033[0m"
+echo -e "\033[34m********************************************************************************\033[0m"
+echo -e "\033[34m  docker-compose.yml文件创建成功，执行docker-compose  up -d命令即可启动容器     \033[0m"
+echo -e "\033[34m********************************************************************************\033[0m"
