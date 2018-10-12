@@ -122,6 +122,22 @@ Dockerfile文件、宿主机网站、数据库data目录以及相关的用户和
 
 =========================
 
+各个镜像创建完后，信息如下：
+
+![](https://i.imgur.com/qAHHcHR.jpg)
+
+执行docker-compose up -d命令启动容器
+ 
+    [root@lb02 ~]# docker-compose  up -d
+    Creating network "root_default" with the default driver
+    Creating mariadb-5.5.60-slave  ... done
+    Creating mariadb-5.5.60-master ... done
+    Creating mycat                 ... done
+    Creating php-7.2.10            ... done
+    Creating nginx-1.14.0          ... done
+    [root@lb02 ~]#
+
+
 容器启动后信息如下：
 
 ![](https://i.imgur.com/Ln4rtmD.jpg)
