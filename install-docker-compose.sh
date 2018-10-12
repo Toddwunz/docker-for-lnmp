@@ -9,6 +9,16 @@ echo -e "\033[34m====================创建部署lnmp的yaml文件==============
 cat>docker-compose.yml<<EOF
 version: "2"
 services:
+    mariadb-master: 
+       image: centos_mariadb
+       container_name: mariadb-5.5.60-master
+       ports:
+         - "3306:3306"
+       environment:
+         - MYSQL_ROOT_PASSWORD=123456
+       volumes:
+         - /testdb/3306/data/:/testdb/3306/data/:rw
+       restart: always
     mariadb-slave: 
        image: centos_mariadb
        container_name: mariadb-5.5.60-slave
@@ -20,15 +30,18 @@ services:
          - /testdb/3307/data/:/testdb/3306/data/:rw
          - /testdb/3307/my.cnf:/etc/my.cnf:ro
        restart: always
-    mariadb-master: 
-       image: centos_mariadb
-       container_name: mariadb-5.5.60-master
+    mycat:
+       image: centos_mycat
+       container_name: mycat
        ports:
-         - "3306:3306"
-       environment:
-         - MYSQL_ROOT_PASSWORD=123456
+         - "8066:8066"
+         - "9066:9066"
+       links:
+         - mariadb-master
+         - mariadb-slave
        volumes:
-         - /testdb/3306/data/:/testdb/3306/data/:rw
+         - /root/mycat/server.xml:/usr/local/mycat/conf/server.xml
+         - /root/mycat/schema.xml:/usr/local/mycat/conf/schema.xml
        restart: always
     php:
        image: centos_php
@@ -36,7 +49,7 @@ services:
        ports:
          - "9000:9000"
        links:
-         - mariadb-master
+         - mycat
        volumes:
          - /testweb/:/usr/local/nginx/html:rw
        restart: always

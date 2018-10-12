@@ -17,8 +17,8 @@ echo -e "\033[34m-----------创建mysql用户和组---------\033[0m"
 id mysql &> /dev/null
 [ $? -ne 0 ] && groupadd -g 3306 mysql  && useradd -g 3306 -u 3306 -M -s /sbin/nologin mysql
 echo -e "\033[34m-----------创建网站目录和数据库data目录---------\033[0m"
-[ ! -d /testweb ] && mkdir /testweb && chown -R nginx.nginx /testweb && chmod -R 777 /testweb
-[ ! -d /testdb ] && mkdir /testdb/{3306,3307}/data -p && chown -R mysql.mysql /testdb && chmod -R 777 /testdb
+[ ! -d /testweb ] && mkdir /testweb && chown -R nginx.nginx /testweb
+[ ! -d /testdb ] && mkdir /testdb/{3306,3307}/data -p && chown -R mysql.mysql /testdb
 echo
 echo -e "\033[34-----------创建nginx、mariadb、php日志存放目录---------\033[0m"
 [ ! -d /var/log/nginx/ ] && mkdir /var/log/nginx/ && chown nginx.nginx /var/log/nginx/
@@ -306,7 +306,6 @@ EOF
 cat>mariadb/start.sh<<EOF
 #!/bin/bash
 if [ ! -f /testdb/3306/data/ibdata1 ]; then
-       chown -R mysql.mysql /testdb/3306/data/
        /usr/local/mysql/scripts/mysql_install_db --user=mysql --basedir=/usr/local/mysql --datadir=/testdb/3306/data/
         /etc/rc.d/init.d/mariadb start
         /usr/local/mysql/bin/mysql -e "grant all on *.* to 'root'@'%' identified by '123456' with grant option;"
@@ -373,8 +372,8 @@ MAINTAINER caomuzhong www.logmm.com
 RUN curl -O http://hk2.php.net/distributions/php-7.2.10.tar.gz  \
     && tar xf php-7.2.10.tar.gz && rm -f php-7.2.10.tar.gz \
     && groupadd -g 3306 mysql && useradd -g 3306 -u 3306 -s /sbin/nologin mysql \
-    && groupadd -g 1080 php-fpm && useradd  -g 1080 -u 1080 -M -s /sbin/nologin php-fpm \
-    && mkdir -p /usr/local/nginx/html && chown php-fpm.php-fpm /usr/local/nginx/html \
+    && groupadd -g 1080 nginx && useradd  -g 1080 -u 1080 -M -s /sbin/nologin nginx \
+    && mkdir -p /usr/local/nginx/html && chown -R nginx.nginx /usr/local/nginx/ \
     && yum install -y epel-release bzip2-devel openssl-devel gnutls-devel gcc gcc-c++  libmcrypt-devel libmcrypt ncurses-devel bison-devel libaio-devel openldap  openldap-devel autoconf bison libxml2-devel libcurl-devel libevent libevent-devel gd-devel  expat-devel \
     && cd php-7.2.10 \
     && ./configure  --prefix=/usr/local/php7 \
@@ -415,8 +414,8 @@ RUN curl -O http://hk2.php.net/distributions/php-7.2.10.tar.gz  \
         --enable-mysqlnd-compression-support \
         --enable-maintainer-zts  \
         --enable-session \
-        --with-fpm-user=php-fpm \
-        --with-fpm-group=php-fpm  && make -j 2  && make -j 2 install && yum clean all \
+        --with-fpm-user=nginx \
+        --with-fpm-group=nginx  && make -j 2  && make -j 2 install && yum clean all \
     && mkdir /usr/local/php7/etc/conf.d && cp php.ini-production  /usr/local/php7/etc/php.ini \
     && cp sapi/fpm/init.d.php-fpm  /etc/rc.d/init.d/php-fpm && chmod +x /etc/rc.d/init.d/php-fpm && chkconfig --add php-fpm \
     && sed -i '/post_max_size/s/8/16/g;/max_execution_time/s/30/300/g;/max_input_time/s/60/300/g;s#\;date.timezone.*#date.timezone \= Asia/Shanghai#g' /usr/local/php7/etc/php.ini \
