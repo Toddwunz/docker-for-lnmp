@@ -11,7 +11,7 @@
 
 宿主机系统：RHEL 7.5
 
-宿主机网站目录：/testweb，数据库data目录：/testdb/3306/data,/testdb/3307/data/
+宿主机网站目录：/testweb，数据库data目录：/testdb/3306/data，/testdb/3307/data/
 
 其中，3306目录为主库，3307目录为从库
 
