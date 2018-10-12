@@ -126,24 +126,25 @@ mycat/
 
 =========================
 
-[root@lb02 ~]# docker ps
-
-CONTAINER ID  IMAGE             STATUS              PORTS                                            NAMES
-
-ee2f863e8140  centos_nginx    Up About an hour    0.0.0.0:80->80/tcp, 0.0.0.0:443->443/tcp         nginx-1.14.0
-
-ef6c6cd7c7f3  centos_php      Up About an hour    0.0.0.0:9000->9000/tcp                           php-7.2.10
-
-0a92db2b83bf  centos_mycat    Up About an hour    0.0.0.0:8066->8066/tcp, 0.0.0.0:9066->9066/tcp   mycat
-
-d91e43833b06  centos_mariadb  Up About an hour    0.0.0.0:3307->3306/tcp                           mariadb-5.5.60-slave
-
-ce6eddeccbea  centos_mariadb  Up About an hour    0.0.0.0:3306->3306/tcp                           mariadb-5.5.60-master
-
-[root@lb02 ~]# 
+![](https://i.imgur.com/Ln4rtmD.jpg)
 
 ==========================
 
-我的博客：www.logmm.com  2018-10-12修改
+【六、部署WordPress】
+
+==========================
+
+网站目录：/testweb/，下载WordPress压缩包解压到该目录中。
+
+
+效果图：
+
+![](https://i.imgur.com/G2G77Oi.jpg)
+
+==========================
+
+我的博客：[www.logmm.com](www.logmm.com)  
+
+2018-10-12修改
 
 ==========================
